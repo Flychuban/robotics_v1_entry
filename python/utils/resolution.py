@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 
 class Resolution:
     def __init__(self, width: int, height: int):

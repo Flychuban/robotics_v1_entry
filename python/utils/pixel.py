@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 
 class Pixel:
     def __init__(self, red: int, green: int, blue: int, alpha: int):

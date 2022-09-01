@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 
 from typing import List
 from utils.resolution import Resolution

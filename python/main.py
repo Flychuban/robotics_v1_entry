@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 
 from typing import List
 import utils.file_parser as fp
