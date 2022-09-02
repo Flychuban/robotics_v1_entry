@@ -2,8 +2,10 @@ from utils.image import StrideImage, PackedImage
 from utils.eye_pattern import *
 from utils.function_tracer import FunctionTracer
 from curses.ascii import isspace
-from utils.pixel import Pixel
+from utils.pixel import Pixel as PixelComponent
 from utils.resolution import Resolution
+
+#Small test case and big test case are in different folder inside python folder  
 
 from utils.image import (
     ImageType,
@@ -16,9 +18,13 @@ from typing import (
     Union
 )
 
-MIN_RED_VALUE = 200
-MINUS_RED_150 = 150
 
+
+def changeRedEyes(cast: [[PixelComponent]], pattern: EyePattern, startingPoint: IsBorder):
+    for rowOutOfElement in range(0, len(pattern)):
+        for columnOutOfElement in range(0, len(pattern[0])):
+            if(not(isspace(pattern[rowOutOfElement][columnOutOfElement]))):
+                cast[startingPoint.row + rowOutOfElement][startingPoint.column + columnOutOfElement].red = cast[startingPoint.row + rowOutOfElement][startingPoint.column + columnOutOfElement].red - 150
 
 
 # This class checks current position whether is The border of the image (final positions)
@@ -30,7 +36,7 @@ class IsBorder:
         return self.row == other.row and self.column == other.column
 
 
-def transformPixelImage(image: Union[PackedImage, StrideImage]) -> [[Pixel]]:
+def transformPixelImage(image: Union[PackedImage, StrideImage]) -> [[PixelComponent]]:
     pixels = None
     if isinstance(image, PackedImage):
         pixels = image.pixels
@@ -45,17 +51,15 @@ def transformPixelImage(image: Union[PackedImage, StrideImage]) -> [[Pixel]]:
     return result
 
 
-def transformToPackedImage(cast: [[Pixel]]) -> PackedImage:
-    pixels = []
-    for row in cast:
-        pixels += row
-    return PackedImage(Resolution(width=len(cast[0]), height=len(cast)), pixels)
-def transformToStrideImage(cast: [[Pixel]]) -> StrideImage:
-    pixels = []
-    for row in cast:
-        pixels += row
-    return StrideImage(Resolution(width=len(cast[0]), height=len(cast)), pixels)
 
+def rectifyImage(image: Union[PackedImage, StrideImage]) -> PackedImage:
+    resolution = image.resolution
+    cast = transformPixelImage(image)
+    for row in range(0, resolution.height):
+        for column in range(0, resolution.width):
+            startingPoint = IsBorder(row, column) #This is the first element in the list
+            exactPattern(cast, startingPoint)
+    return cast
 
 def compute_solution(images: List[Union[PackedImage, StrideImage]]):
     ft = FunctionTracer("compute_solution", "seconds")
@@ -71,38 +75,34 @@ def compute_solution(images: List[Union[PackedImage, StrideImage]]):
     del ft
 
 
-def rectifyImage(image: Union[PackedImage, StrideImage]) -> PackedImage:
-    resolution = image.resolution
-    # transform the list of pixels to 2d array of pixels
-    cast = transformPixelImage(image)
-    for row in range(0, resolution.height):
-        for column in range(0, resolution.width):
-            topLeftCorner = IsBorder(row, column)
-            findMatchingPattern(cast, topLeftCorner)
-    return cast
 
 
-def findMatchingPattern(cast: [[Pixel]], topLeftCorner: IsBorder):
-    # we have to check third pattern firstly because it is based on first and second pattern. 
+def exactPattern(cast: [[PixelComponent]], startingPoint: IsBorder):
+    # We have to check third pattern firstly because it is based on first and second pattern. 
     patterns = [EYE_PATTERN_3, EYE_PATTERN_4, EYE_PATTERN_1, EYE_PATTERN_2]
     for pattern in patterns:
-        if checkElementPattern(cast, topLeftCorner, pattern):
-            changeRedEyes(cast, pattern, topLeftCorner)
+        if checkElementPattern(cast, startingPoint, pattern):
+            changeRedEyes(cast, pattern, startingPoint)
 
 
-def checkElementPattern(cast: [[Pixel]], topLeftCorner: IsBorder, pattern: EyePattern) -> bool:
+def checkElementPattern(cast: [[PixelComponent]], startingPoint: IsBorder, pattern: EyePattern) -> bool:
     for rowOutOfElement in range(0, len(pattern)):
         for columnOutOfElement in range(0, len(pattern[0])):
             patternSymbol = pattern[rowOutOfElement][columnOutOfElement]
-            castRedComponnet = cast[topLeftCorner.row + rowOutOfElement][topLeftCorner.column + columnOutOfElement].red
-            if(not(isspace(patternSymbol)) and castRedComponnet < MIN_RED_VALUE):
+            castRedComponnet = cast[startingPoint.row + rowOutOfElement][startingPoint.column + columnOutOfElement].red
+            if(not(isspace(patternSymbol)) and castRedComponnet < 200):
                 return  False
     return True
 
-def changeRedEyes(cast: [[Pixel]], pattern: EyePattern, topLeftCorner: IsBorder):
-    for rowOutOfElement in range(0, len(pattern)):
-        for columnOutOfElement in range(0, len(pattern[0])):
-            if(not(isspace(pattern[rowOutOfElement][columnOutOfElement]))):
-                cast[topLeftCorner.row + rowOutOfElement][topLeftCorner.column + columnOutOfElement].red = cast[topLeftCorner.row + rowOutOfElement][topLeftCorner.column + columnOutOfElement].red - MINUS_RED_150
+def transformToPackedImage(cast: [[PixelComponent]]) -> PackedImage:
+    pixels = []
+    for row in cast:
+        pixels += row
+    return PackedImage(Resolution(width=len(cast[0]), height=len(cast)), pixels)
+def transformToStrideImage(cast: [[PixelComponent]]) -> StrideImage:
+    pixels = []
+    for row in cast:
+        pixels += row
+    return StrideImage(Resolution(width=len(cast[0]), height=len(cast)), pixels)
 
             
